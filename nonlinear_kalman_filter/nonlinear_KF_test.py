@@ -142,7 +142,7 @@ def kf_core():
     print("log likelihood: ", log_likelihood)
     '''
 
-    init_params = "random"  # "manual", "random", "underlying"
+    init_params = "manual"  # "manual", "random", "underlying"
     epoch_max = 1e4
 
     if init_params == "underlying":
@@ -154,6 +154,9 @@ def kf_core():
         F_diag_est = torch.tensor(0.1 * np.ones(2), requires_grad=True).to(torch.float64)
         Q_diag_est = torch.tensor(0.5 * np.ones(2), requires_grad=True).to(torch.float64)  # Q_diag_est: shape (2,)
         R_est = torch.tensor(np.ones(1), requires_grad=True).to(torch.float64)  # R_est: shape (1,)
+        #F_diag_est = torch.tensor(0.1 * np.ones(2), requires_grad=True).to(torch.float64)
+        #Q_diag_est = torch.tensor(0.5 * np.ones(2), requires_grad=True).to(torch.float64)  # Q_diag_est: shape (2,)
+        #R_est = torch.tensor(np.ones(1), requires_grad=True).to(torch.float64)  # R_est: shape (1,)
 
     if init_params == "random":
         np.random.seed(int(1000 * time.time()) % (2 ** 32))
@@ -255,7 +258,7 @@ def kf_core():
             "Q_est": (np.diag(Q), train_log[-1][2]),
             "R_est": (np.diag(R), train_log[-1][3])}
 
-result = kf_core()
+#result = kf_core()
 
 #%%
 filename = os.path.join(os.path.dirname(__file__), "nonlinear_KF_robustness_test.pkl")
@@ -265,13 +268,24 @@ if os.path.exists(filename):
 else:
     test_results = []
 
-for _ in range(50):
-    test_results.append(kf_core())
-with open(filename, "wb") as f:
-    pickle.dump(test_results, f)
+#for _ in range(50):
+#    test_results.append(kf_core())
+#with open(filename, "wb") as f:
+#    pickle.dump(test_results, f)
 
 #%%
+log_likelihood_diff = [float(x["log_likelihood"][1]) - float(x["log_likelihood"][0]) for x in test_results]
+F_diff = [np.linalg.norm(x["F_est"][1] - x["F_est"][0], ord=1) for x in test_results]
+Q_diff = [np.linalg.norm(x["Q_est"][1] - x["Q_est"][0], ord=1) for x in test_results]
+R_diff = [np.abs(float(x["R_est"][1]) - float(x["R_est"][0])) for x in test_results]
 
+plt.plot(F_diff, label=r"$\Delta F$")
+#plt.plot(Q_diff, label=r"$\Delta Q$")
+#plt.plot(R_diff, label=r"$\Delta R$")
+plt.legend()
+
+#%%
+plt.plot(log_likelihood_diff, label=r"$\Delta \log L$")
 
 
 

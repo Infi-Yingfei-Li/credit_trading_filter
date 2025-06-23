@@ -10,6 +10,8 @@ RANDOM_SEED = 30
 #%%
 t_step = 500; trade_occur_rate = 0.1; ask_prop = 0.5
 
+L = 100; alpha = 1; beta = 0; kappa = 3*L/2
+
 nonlinear_type = "abs"  # "abs", "square", "exp"
 
 if nonlinear_type == "abs":
@@ -61,6 +63,15 @@ optimal_kalman_gain_hist = []
 x_posterior_est_hist = []; p_posterior_est_hist = []
 
 x_posterior_est = x_0; p_posterior_est = Q
+W_a_0 = (np.power(alpha, 2)*kappa - L) / (np.power(kappa, 2)*kappa)
+W_c_0 = W_a_0 + (1 - np.power(alpha, 2) + beta)
+A = np.linalg.cholesky(p_posterior_est)
+s_1 = x_posterior_est + alpha*np.sqrt(kappa)*A
+s_2 = x_posterior_est - alpha*np.sqrt(kappa)*A
+s = np.concatenate([s_1, s_2], axis=1)
+W_a = 1/(2*np.power(alpha, 2)*kappa)
+W_c = 1/(2*np.power(kappa, 2)*kappa)
+
 for t_idx in range(t_step):
     # prediction step
     if t_idx == 0 or order_type[t_idx - 1] != 0:
